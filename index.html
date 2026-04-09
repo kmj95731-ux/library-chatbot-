@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>책과 함께하는 순간 📚</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #6c63ff;
+      --primary-light: #a29bfe;
+      --primary-dark: #4834d4;
+      --accent: #fd79a8;
+      --accent2: #00cec9;
+      --bg: #f8f7ff;
+      --bg-card: #ffffff;
+      --text: #2d3436;
+      --text-sub: #636e72;
+      --border: #e0dffe;
+      --shadow: 0 4px 24px rgba(108,99,255,0.10);
+      --radius: 18px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* 헤더 */
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 16px 24px;
+      box-shadow: 0 2px 12px rgba(108,99,255,0.3);
+      flex-shrink: 0;
+    }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { font-size: 2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+    .logo h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+    .logo p { font-size: 0.8rem; opacity: 0.85; margin-top: 2px; }
+    .badge {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* 채팅 영역 */
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      scroll-behavior: smooth;
+    }
+    .chat-area::-webkit-scrollbar { width: 6px; }
+    .chat-area::-webkit-scrollbar-track { background: transparent; }
+    .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* 웰컴 카드 */
+    .welcome-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      margin: auto;
+      max-width: 520px;
+      width: 100%;
+    }
+    .welcome-icon { font-size: 3rem; margin-bottom: 16px; }
+    .welcome-card h2 { font-size: 1.5rem; color: var(--primary); margin-bottom: 12px; }
+    .welcome-card p { color: var(--text-sub); line-height: 1.7; font-size: 0.95rem; }
+    .example-tags { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+    .tag {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      font-weight: 500;
+    }
+
+    /* 사용자 버블 */
+    .message-user { display: flex; justify-content: flex-end; }
+    .message-user .bubble {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border-radius: var(--radius) var(--radius) 4px var(--radius);
+      padding: 14px 18px;
+      max-width: 75%;
+      box-shadow: 0 2px 8px rgba(108,99,255,0.25);
+    }
+    .bubble-label { font-size: 0.75rem; opacity: 0.75; margin-bottom: 4px; font-weight: 600; }
+    .bubble-book { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .bubble-reason { font-size: 0.88rem; opacity: 0.9; line-height: 1.5; }
+
+    /* 로딩 */
+    .loading-msg {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 22px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-width: 340px;
+    }
+    .loading-spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-steps { display: flex; flex-direction: column; gap: 3px; }
+    .loading-text { font-size: 0.9rem; color: var(--text-sub); }
+    .loading-step { font-size: 0.78rem; color: var(--text-sub); opacity: 0.6; }
+    .loading-step.active { color: var(--primary); opacity: 1; font-weight: 600; }
+
+    /* 봇 응답 */
+    .bot-response { display: flex; flex-direction: column; gap: 16px; animation: fadeInUp 0.4s ease; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .response-header { display: flex; align-items: center; gap: 10px; }
+    .bot-avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .bot-name { font-size: 0.82rem; font-weight: 700; color: var(--primary); }
+
+    /* 분석 카드 */
+    .analysis-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+    }
+    .card-title { font-size: 0.82rem; font-weight: 700; color: var(--primary); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; }
+    .analysis-summary { color: var(--text); font-size: 0.93rem; line-height: 1.7; margin-bottom: 12px; }
+    .mood-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .mood-chip {
+      background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(253,121,168,0.1));
+      border: 1px solid rgba(108,99,255,0.2);
+      color: var(--primary-dark);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    /* 섹션 카드 */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .section-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-icon { font-size: 1.3rem; }
+    .section-title-wrap h3 { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .section-title-wrap p { font-size: 0.78rem; color: var(--text-sub); margin-top: 2px; }
+
+    /* 음악 */
+    .music-list { display: flex; flex-direction: column; }
+    .music-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px;
+      text-decoration: none; color: inherit;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+    }
+    .music-item:last-child { border-bottom: none; }
+    .music-item:hover { background: rgba(108,99,255,0.04); }
+    .music-thumb-wrap {
+      position: relative; flex-shrink: 0;
+      width: 80px; height: 56px; border-radius: 8px; overflow: hidden;
+      cursor: pointer;
+    }
+    .music-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .music-thumb-placeholder {
+      width: 100%; height: 100%;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+    }
+    .music-play-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .music-thumb-wrap:hover .music-play-overlay { background: rgba(0,0,0,0.5); }
+    .music-play-overlay svg { width: 28px; height: 28px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4)); }
+    .music-info { flex: 1; min-width: 0; }
+    .music-title { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+    .music-channel { font-size: 0.76rem; color: var(--text-sub); margin-top: 2px; }
+
+    /* 인라인 플레이어 */
+    .music-player-wrap {
+      padding: 0 18px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .music-player-wrap:last-child { border-bottom: none; }
+    .music-player-wrap iframe {
+      width: 100%; height: 200px;
+      border: none; border-radius: 10px;
+      display: block;
+    }
+    .music-player-close {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; color: var(--text-sub);
+      cursor: pointer; padding: 8px 0 4px;
+      width: fit-content;
+    }
+    .music-player-close:hover { color: var(--primary); }
+
+    /* 도서 */
+    .book-grid { display: grid; grid-template-columns: repeat(2, 1fr); }
+    .book-item {
+      display: flex; gap: 12px;
+      padding: 14px 16px;
+      text-decoration: none; color: inherit;
+      transition: background 0.15s;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .book-item:nth-child(even) { border-right: none; }
+    .book-item:nth-last-child(-n+2) { border-bottom: none; }
+    .book-item:hover { background: rgba(0,206,201,0.04); }
+    .book-cover { width: 52px; height: 72px; object-fit: cover; border-radius: 4px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .book-cover-placeholder {
+      width: 52px; height: 72px; border-radius: 4px;
+      background: linear-gradient(135deg, var(--accent2), var(--primary-light));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    .book-info { flex: 1; min-width: 0; }
+    .book-title { font-size: 0.85rem; font-weight: 700; line-height: 1.35; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .book-author { font-size: 0.75rem; color: var(--text-sub); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .book-publisher { font-size: 0.72rem; color: var(--text-sub); opacity: 0.7; }
+
+    /* 에러 */
+    .error-msg {
+      background: #fff5f5;
+      border: 1px solid #fed7d7;
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      color: #c53030;
+      font-size: 0.88rem;
+    }
+
+    /* 입력 영역 */
+    .input-area {
+      padding: 12px 16px 16px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .input-card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: 0 -2px 12px rgba(108,99,255,0.07);
+    }
+    .input-row { display: flex; gap: 10px; align-items: flex-end; }
+    .input-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .input-group.flex-2 { flex: 2; }
+    .input-group label { font-size: 0.75rem; font-weight: 700; color: var(--primary); letter-spacing: 0.02em; }
+    .input-group input {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 13px;
+      font-size: 0.88rem;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: var(--bg);
+      width: 100%;
+      font-family: inherit;
+    }
+    .input-group input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+      background: white;
+    }
+    .input-group input::placeholder { color: #b2bec3; }
+    .send-btn {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white; border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-size: 0.9rem; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      white-space: nowrap;
+      transition: opacity 0.2s, transform 0.1s;
+      font-family: inherit; flex-shrink: 0;
+      height: fit-content;
+    }
+    .send-btn:hover { opacity: 0.9; }
+    .send-btn:active { transform: scale(0.97); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 600px) {
+      .input-row { flex-direction: column; }
+      .input-group.flex-2 { flex: 1; }
+      .send-btn { width: 100%; justify-content: center; }
+      .book-grid { grid-template-columns: 1fr; }
+      .book-item { border-right: none !important; }
+      .book-item:last-child { border-bottom: none !important; }
+      .logo p { display: none; }
+      .welcome-card { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">📚</span>
+          <div>
+            <h1>책과 함께하는 순간</h1>
+            <p>당신의 책을 음악과 새로운 책으로 완성해드려요</p>
+          </div>
+        </div>
+        <div class="badge">도서관의 날 2026</div>
+      </div>
+    </header>
+
+    <main class="chat-area" id="chatArea">
+      <div class="welcome-card" id="welcomeCard">
+        <div class="welcome-icon">🌟</div>
+        <h2>안녕하세요!</h2>
+        <p>최근에 인상 깊게 읽은 책이 있나요?<br/>책 제목과 인상 깊었던 이유를 알려주시면<br/>어울리는 <strong>음악</strong>과 <strong>다음에 읽을 책</strong>을 추천해드릴게요.</p>
+        <div class="example-tags">
+          <span class="tag">📖 소설</span>
+          <span class="tag">🔬 과학</span>
+          <span class="tag">🌏 역사</span>
+          <span class="tag">💭 철학</span>
+          <span class="tag">🎭 에세이</span>
+        </div>
+      </div>
+    </main>
+
+    <footer class="input-area">
+      <div class="input-card">
+        <div class="input-row">
+          <div class="input-group">
+            <label for="bookTitle">📖 책 제목</label>
+            <input type="text" id="bookTitle" placeholder="예) 어린 왕자, 채식주의자..." autocomplete="off" />
+          </div>
+          <div class="input-group flex-2">
+            <label for="reason">💬 인상 깊었던 이유</label>
+            <input type="text" id="reason" placeholder="예) 주인공의 고독함이 내 마음을 울렸어요..." autocomplete="off" />
+          </div>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+            <span id="btnText">추천 받기</span>
+            <span id="btnIcon">✨</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // =============================================
+    // API 키 설정
+    // =============================================
+    const GEMINI_API_KEY   = "AIzaSyBv95zmv_NBsTxUTXSG8EbiSMKF_6ckheE";
+    const YOUTUBE_API_KEY  = "AIzaSyDRzKbitbvey3Y0UJwtAOZGOyC8vGQh0qI";
+    const ALADIN_API_KEY   = "ttbkmj95731255001";
+    // =============================================
+
+    const chatArea     = document.getElementById("chatArea");
+    const bookTitleInput = document.getElementById("bookTitle");
+    const reasonInput  = document.getElementById("reason");
+    const sendBtn      = document.getElementById("sendBtn");
+
+    reasonInput.addEventListener("keydown", e => { if (e.key === "Enter") sendMessage(); });
+    bookTitleInput.addEventListener("keydown", e => { if (e.key === "Enter") reasonInput.focus(); });
+
+    async function sendMessage() {
+      const bookTitle = bookTitleInput.value.trim();
+      const reason    = reasonInput.value.trim();
+      if (!bookTitle || !reason) { shakeInput(!bookTitle ? bookTitleInput : reasonInput); return; }
+
+      document.getElementById("welcomeCard")?.remove();
+      setLoading(true);
+      appendUserBubble(bookTitle, reason);
+      const loadingEl = appendLoading();
+      bookTitleInput.value = "";
+      reasonInput.value = "";
+
+      try {
+        const analysis = await analyzeWithGemini(bookTitle, reason);
+        updateLoadingStep(loadingEl, 1);
+        const [music, books] = await Promise.all([
+          searchYouTube(analysis.music_queries || []),
+          searchAladin(analysis.book_queries || [])
+        ]);
+        loadingEl.remove();
+        appendBotResponse(analysis, music, books);
+      } catch (err) {
+        loadingEl.remove();
+        appendError("오류가 발생했습니다: " + err.message);
+      }
+
+      setLoading(false);
+      scrollToBottom();
+    }
+
+    // ── Gemini API ──────────────────────────────
+    async function analyzeWithGemini(bookTitle, reason) {
+      const prompt = `당신은 도서관 사서이자 문화 큐레이터입니다.
+고등학생이 인상 깊게 읽은 책에 대해 이야기하면,
+책의 감성과 주제를 분석하여 어울리는 음악과 함께 읽으면 좋은 책을 추천해줍니다.
+
+책 제목: ${bookTitle}
+인상 깊었던 이유: ${reason}
+
+아래 JSON 형식으로만 응답하세요:
+{
+  "summary": "책의 감성과 주제를 2-3문장으로 요약 (고등학생 눈높이에 맞게)",
+  "mood": "책의 전체적인 분위기 (예: 서정적, 긴장감 넘치는, 따뜻한, 철학적 등)",
+  "themes": ["주제 키워드 3개"],
+  "music_queries": [
+    "유튜브 검색어1 (한국어, 분위기에 맞는 음악 플레이리스트)",
+    "유튜브 검색어2 (영어, 장르나 감성 기반)",
+    "유튜브 검색어3 (구체적인 아티스트나 곡 스타일)"
+  ],
+  "book_queries": [
+    "알라딘 검색어1 (비슷한 장르/주제)",
+    "알라딘 검색어2 (같은 작가 관련 또는 비슷한 분위기)",
+    "알라딘 검색어3 (고등학생 추천 관련 키워드)"
+  ],
+  "music_reason": "이런 음악을 추천하는 이유 1문장",
+  "book_reason": "이런 책을 추천하는 이유 1문장"
+}`;
+
+      const models = [
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-flash-latest"
+      ];
+
+      for (const model of models) {
+        try {
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { responseMimeType: "application/json" }
+              })
+            }
+          );
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+          const text = data.candidates[0].content.parts[0].text;
+          return JSON.parse(text);
+        } catch (e) {
+          if (models.indexOf(model) === models.length - 1) throw e;
+        }
+      }
+    }
+
+    // ── YouTube API ─────────────────────────────
+    async function searchYouTube(queries) {
+      const results = [];
+      const seenIds = new Set();
+
+      for (const query of queries.slice(0, 2)) {
+        const url = `https://www.googleapis.com/youtube/v3/search?key=${YOUTUBE_API_KEY}&q=${encodeURIComponent(query)}&part=snippet&type=video&maxResults=3&videoCategoryId=10&safeSearch=strict`;
+        try {
+          const res  = await fetch(url);
+          const data = await res.json();
+          for (const item of data.items || []) {
+            const id = item.id.videoId;
+            if (seenIds.has(id)) continue;
+            seenIds.add(id);
+            results.push({
+              title:     item.snippet.title,
+              channel:   item.snippet.channelTitle,
+              thumbnail: item.snippet.thumbnails.medium.url,
+              url:       `https://www.youtube.com/watch?v=${id}`
+            });
+            if (results.length >= 4) break;
+          }
+        } catch (e) { console.warn("YouTube 검색 오류:", e); }
+        if (results.length >= 4) break;
+      }
+      return results;
+    }
+
+    // ── 알라딘 API (CORS 프록시 경유) ───────────
+    async function searchAladin(queries) {
+      const results  = [];
+      const seenIsbns = new Set();
+
+      for (const query of queries.slice(0, 2)) {
+        const aladinUrl = `http://www.aladin.co.kr/ttb/api/ItemSearch.aspx?ttbkey=${ALADIN_API_KEY}&Query=${encodeURIComponent(query)}&QueryType=Keyword&MaxResults=3&start=1&SearchTarget=Book&output=js&Version=20131101&Cover=Mid`;
+        const proxyUrl  = `https://api.allorigins.win/raw?url=${encodeURIComponent(aladinUrl)}`;
+        try {
+          const res  = await fetch(proxyUrl);
+          const data = await res.json();
+          for (const item of data.item || []) {
+            const isbn = item.isbn13 || item.isbn;
+            if (seenIsbns.has(isbn)) continue;
+            seenIsbns.add(isbn);
+            results.push({
+              title:     item.title     || "",
+              author:    item.author    || "",
+              publisher: item.publisher || "",
+              cover:     item.cover     || "",
+              url:       item.link      || ""
+            });
+            if (results.length >= 4) break;
+          }
+        } catch (e) { console.warn("알라딘 검색 오류:", e); }
+        if (results.length >= 4) break;
+      }
+      return results;
+    }
+
+    // ── UI 헬퍼 ─────────────────────────────────
+    function appendUserBubble(bookTitle, reason) {
+      const el = document.createElement("div");
+      el.className = "message-user";
+      el.innerHTML = `
+        <div class="bubble">
+          <div class="bubble-label">📖 내가 읽은 책</div>
+          <div class="bubble-book">『${esc(bookTitle)}』</div>
+          <div class="bubble-reason">${esc(reason)}</div>
+        </div>`;
+      chatArea.appendChild(el);
+      scrollToBottom();
+    }
+
+    function appendLoading() {
+      const el = document.createElement("div");
+      el.className = "loading-msg";
+      el.innerHTML = `
+        <div class="loading-spinner"></div>
+        <div class="loading-steps">
+          <div class="loading-text">분석 중이에요...</div>
+          <div class="loading-step active">🤖 Gemini가 책의 감성을 분석하고 있어요</div>
+          <div class="loading-step">🎵 어울리는 음악을 찾고 있어요</div>
+          <div class="loading-step">📚 다음 책을 찾고 있어요</div>
+        </div>`;
+      chatArea.appendChild(el);
+      scrollToBottom();
+      return el;
+    }
+
+    function updateLoadingStep(el, idx) {
+      const steps = el.querySelectorAll(".loading-step");
+      steps.forEach(s => s.classList.remove("active"));
+      if (steps[idx]) steps[idx].classList.add("active");
+    }
+
+    function appendBotResponse(analysis, music, books) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "bot-response";
+      wrapper.innerHTML = `
+        <div class="response-header">
+          <div class="bot-avatar">🤖</div>
+          <div><div class="bot-name">도서관 AI 큐레이터</div></div>
+        </div>`;
+
+      // 분석 카드
+      if (analysis) {
+        const themes = (analysis.themes || []).map(t => `<span class="mood-chip">${esc(t)}</span>`).join("");
+        const mood   = analysis.mood ? `<span class="mood-chip">✨ ${esc(analysis.mood)}</span>` : "";
+        const card   = document.createElement("div");
+        card.className = "analysis-card";
+        card.innerHTML = `
+          <div class="card-title">📊 책 분석</div>
+          <div class="analysis-summary">${esc(analysis.summary || "")}</div>
+          <div class="mood-chips">${mood}${themes}</div>`;
+        wrapper.appendChild(card);
+      }
+
+      // 음악 섹션
+      const musicSec = document.createElement("div");
+      musicSec.className = "section-card";
+      musicSec.innerHTML = `
+        <div class="section-header">
+          <span class="section-icon">🎵</span>
+          <div class="section-title-wrap">
+            <h3>이 책과 함께 들으면 좋은 음악</h3>
+            <p>${esc(analysis?.music_reason || "이 책의 감성에 어울리는 음악들이에요.")}</p>
+          </div>
+        </div>`;
+      const musicList = document.createElement("div");
+      musicList.className = "music-list";
+      if (music.length > 0) {
+        music.forEach(item => {
+          const videoId = item.url.split("v=")[1];
+
+          // 아이템 행
+          const row = document.createElement("div");
+          row.className = "music-item";
+          row.style.cursor = "pointer";
+          row.innerHTML = `
+            <div class="music-thumb-wrap">
+              ${item.thumbnail
+                ? `<img class="music-thumb" src="${esc(item.thumbnail)}" alt="" loading="lazy">`
+                : `<div class="music-thumb-placeholder">🎵</div>`}
+              <div class="music-play-overlay">
+                <svg viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+            <div class="music-info">
+              <div class="music-title">${esc(item.title)}</div>
+              <div class="music-channel">${esc(item.channel)}</div>
+            </div>`;
+
+          // 인라인 플레이어 (처음엔 숨김)
+          const playerWrap = document.createElement("div");
+          playerWrap.className = "music-player-wrap";
+          playerWrap.style.display = "none";
+          playerWrap.innerHTML = `
+            <div class="music-player-close">▲ 닫기</div>
+            <iframe
+              src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0"
+              allow="autoplay; encrypted-media"
+              allowfullscreen
+              loading="lazy">
+            </iframe>`;
+
+          // 클릭 시 플레이어 토글
+          row.addEventListener("click", () => {
+            const isOpen = playerWrap.style.display !== "none";
+            // 다른 플레이어 모두 닫기
+            musicList.querySelectorAll(".music-player-wrap").forEach(p => {
+              p.style.display = "none";
+              // autoplay 중단을 위해 src 초기화
+              const iframe = p.querySelector("iframe");
+              const src = iframe.src;
+              iframe.src = "";
+              iframe.src = src.replace("autoplay=1", "autoplay=0");
+            });
+            if (!isOpen) {
+              playerWrap.style.display = "block";
+              // autoplay 재설정
+              const iframe = playerWrap.querySelector("iframe");
+              iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+            }
+          });
+
+          playerWrap.querySelector(".music-player-close").addEventListener("click", e => {
+            e.stopPropagation();
+            playerWrap.style.display = "none";
+            const iframe = playerWrap.querySelector("iframe");
+            iframe.src = "";
+          });
+
+          musicList.appendChild(row);
+          musicList.appendChild(playerWrap);
+        });
+      } else {
+        musicList.innerHTML = `<div style="padding:16px 18px;color:var(--text-sub);font-size:0.85rem;">음악을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>`;
+      }
+      musicSec.appendChild(musicList);
+      wrapper.appendChild(musicSec);
+
+      // 도서 섹션
+      const bookSec = document.createElement("div");
+      bookSec.className = "section-card";
+      bookSec.innerHTML = `
+        <div class="section-header">
+          <span class="section-icon">📚</span>
+          <div class="section-title-wrap">
+            <h3>다음에 읽으면 좋은 책</h3>
+            <p>${esc(analysis?.book_reason || "이 책을 좋아했다면 이런 책도 좋아할 거예요.")}</p>
+          </div>
+        </div>`;
+      const bookGrid = document.createElement("div");
+      bookGrid.className = "book-grid";
+      if (books.length > 0) {
+        books.forEach(book => {
+          const a = document.createElement("a");
+          a.className = "book-item";
+          a.href = book.url || "#";
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.innerHTML = `
+            ${book.cover
+              ? `<img class="book-cover" src="${esc(book.cover)}" alt="" loading="lazy">`
+              : `<div class="book-cover-placeholder">📖</div>`}
+            <div class="book-info">
+              <div class="book-title">${esc(book.title)}</div>
+              <div class="book-author">${esc(book.author)}</div>
+              <div class="book-publisher">${esc(book.publisher)}</div>
+            </div>`;
+          bookGrid.appendChild(a);
+        });
+      } else {
+        bookGrid.innerHTML = `<div style="padding:16px 18px;color:var(--text-sub);font-size:0.85rem;grid-column:1/-1;">책을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</div>`;
+      }
+      bookSec.appendChild(bookGrid);
+      wrapper.appendChild(bookSec);
+
+      chatArea.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    function appendError(msg) {
+      const el = document.createElement("div");
+      el.className = "error-msg";
+      el.textContent = `⚠️ ${msg}`;
+      chatArea.appendChild(el);
+    }
+
+    function setLoading(on) {
+      sendBtn.disabled = on;
+      bookTitleInput.disabled = on;
+      reasonInput.disabled = on;
+      document.getElementById("btnText").textContent = on ? "분석 중..." : "추천 받기";
+      document.getElementById("btnIcon").textContent = on ? "⏳" : "✨";
+    }
+
+    function scrollToBottom() { chatArea.scrollTop = chatArea.scrollHeight; }
+    function shakeInput(el) {
+      el.style.borderColor = "#fc5c65";
+      el.focus();
+      setTimeout(() => el.style.borderColor = "", 1500);
+    }
+    function esc(str) {
+      return String(str || "")
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    }
+  </script>
+</body>
+</html>
